@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Campground</title>
-</head>
-<body>
+<% layout('layouts/boilerplate') %>
     <h1>Create New Campground</h1>
     <form action="/campgrounds" method="POST">
         <label for="title">Title:</label>
@@ -22,5 +15,3 @@
         <br>
         <button>Create Campground</button>
     </form>
-</body>
-</html>

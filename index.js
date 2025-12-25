@@ -4,6 +4,7 @@ const path=require('path');
 const mongoose=require('mongoose');
 const Campground=require('./models/campground');
 const methodOverride=require('method-override');
+const ejsmate=require('ejs-mate');
 
 async function connectDB() {
   try {
@@ -21,7 +22,7 @@ app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'views'));
 app.use(express.urlencoded({ extended: true }));//to read form data
 app.use(methodOverride('_method'));//to support PUT and DELETE requests
-
+app.engine('ejs',ejsmate);
 
 app.get('/',(req,res)=>{
     res.render('home');
