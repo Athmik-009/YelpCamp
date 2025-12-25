@@ -2,7 +2,7 @@ const express=require('express');
 const app=express();
 const path=require('path');
 const mongoose=require('mongoose');
-const Campground=require('./models/campground');
+const Campground=require('./models/campground');// ./ is used to describe that it a relative path and not an installed npm package
 const methodOverride=require('method-override');
 const ejsmate=require('ejs-mate');
 
