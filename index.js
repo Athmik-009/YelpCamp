@@ -5,6 +5,7 @@ const mongoose=require('mongoose');
 const Campground=require('./models/campground');// ./ is used to describe that it a relative path and not an installed npm package
 const methodOverride=require('method-override');
 const ejsmate=require('ejs-mate');
+const ExpressError=require('./utils/ExpressError');
 
 async function connectDB() {
   try {
@@ -36,6 +37,7 @@ app.get('/campgrounds/new',(req,res)=>{
     res.render('campgrounds/new');
 });
 app.post('/campgrounds',async(req,res)=>{
+    if(!req.body.campground) throw new ExpressError('Invalid Campground Data', 400);//even though you have stopped incomplete submission of forms you can still send incomplete data through postman
     const campground=new Campground(req.body.campground);
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`);
@@ -67,6 +69,15 @@ app.delete('/campgrounds/:id',async(req,res)=>{
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
+});
+app.use((req, res, next) => {
+    next(new ExpressError('Page Not Found', 404));
+});// app.all('*', (req, res, next) => {  //only runs if no other route matches
+app.use((err,req,res,next)=>{  //no need to use try catch block in express 5 and above it will catch async errors automatically
+    console.error(err.stack);
+    if(!err.statusCode) err.statusCode = 500;
+    if(!err.message) err.message = 'Something went wrong';
+    res.status(err.statusCode).render('error', { statusCode: err.statusCode, message: err.message });
 });
 app.listen(3000,()=>{
     console.log("Server is running on port 3000");
