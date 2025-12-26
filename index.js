@@ -6,6 +6,7 @@ const Campground=require('./models/campground');// ./ is used to describe that i
 const methodOverride=require('method-override');
 const ejsmate=require('ejs-mate');
 const ExpressError=require('./utils/ExpressError');
+const Joi=require('joi')
 
 async function connectDB() {
   try {
@@ -25,6 +26,22 @@ app.use(express.urlencoded({ extended: true }));//to read form data
 app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 
+const validateCampground = (req, res, next) => {//route level middleware
+    const schema = Joi.object({
+        title: Joi.string().required(),
+        location: Joi.string().required(),
+        image: Joi.string().required(),
+        price: Joi.number().min(0).required(),
+        description: Joi.string().required()
+    });
+    const { error } = schema.validate(req.body.campground);
+    if (error) {
+        const msg=error.details.map(el=>el.message).join(',');
+        throw new ExpressError(msg, 400);
+    }
+    next();
+};
+
 app.get('/',(req,res)=>{
     res.render('home');
 });
@@ -36,8 +53,7 @@ app.get('/campgrounds',async(req,res)=>{
 app.get('/campgrounds/new',(req,res)=>{
     res.render('campgrounds/new');
 });
-app.post('/campgrounds',async(req,res)=>{
-    if(!req.body.campground) throw new ExpressError('Invalid Campground Data', 400);//even though you have stopped incomplete submission of forms you can still send incomplete data through postman
+app.post('/campgrounds',validateCampground,async(req,res)=>{
     const campground=new Campground(req.body.campground);
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`);
@@ -50,7 +66,7 @@ app.get('/campgrounds/:id/edit',async(req,res)=>{
     const campground=await Campground.findById(req.params.id);
     res.render('campgrounds/edit',{ campground });
 });
-app.put('/campgrounds/:id',async(req,res)=>{
+app.put('/campgrounds/:id',validateCampground,async(req,res)=>{
     const { id } = req.params;
     await Campground.findByIdAndUpdate(id, req.body.campground);
     res.redirect(`/campgrounds/${id}`);
