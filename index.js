@@ -8,7 +8,7 @@ const ejsmate=require('ejs-mate');
 const ExpressError=require('./utils/ExpressError');
 const {campgroundSchema,reviewSchema}=require('./schemas.js');
 const Review=require('./models/review');
-
+const camgroundroutes=require('./routes/campgrounds.js');
 async function connectDB() {
   try {
     await mongoose.connect('mongodb://localhost:27017/yelpcamp');
@@ -27,15 +27,7 @@ app.use(express.urlencoded({ extended: true }));//to read form data
 app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 
-const validateCampground = (req, res, next) => {//route level middleware
-    const { error } = campgroundSchema.validate(req.body);
-    if (error) {
-        const msg=error.details.map(el=>el.message).join(',');
-        throw new ExpressError(msg, 400);
-    }
-    else
-        next();
-};
+
 const validateReview = (req, res, next) => {//route level middleware
     const { error } = reviewSchema.validate(req.body);
     if (error) {
@@ -46,35 +38,13 @@ const validateReview = (req, res, next) => {//route level middleware
         next();
 };
 
+app.use('/campgrounds',camgroundroutes);//prefix all campground routes with /campgrounds
+
 app.get('/',(req,res)=>{
     res.render('home');
 });
 
-app.get('/campgrounds',async(req,res)=>{
-    const campgrounds=await Campground.find({});
-    res.render('campgrounds/index',{ campgrounds });
-});
-app.get('/campgrounds/new',(req,res)=>{
-    res.render('campgrounds/new');
-});
-app.post('/campgrounds',validateCampground,async(req,res)=>{
-    const campground=new Campground(req.body.campground);
-    await campground.save();
-    res.redirect(`/campgrounds/${campground._id}`);
-});
-app.get('/campgrounds/:id',async(req,res)=>{
-    const campground=await Campground.findById(req.params.id).populate('reviews');//populate reviews array with actual review documents instead of just their ids
-    res.render('campgrounds/show',{ campground });
-});
-app.get('/campgrounds/:id/edit',async(req,res)=>{
-    const campground=await Campground.findById(req.params.id);
-    res.render('campgrounds/edit',{ campground });
-});
-app.put('/campgrounds/:id',validateCampground,async(req,res)=>{
-    const { id } = req.params;
-    await Campground.findByIdAndUpdate(id, req.body.campground);
-    res.redirect(`/campgrounds/${id}`);
-});
+
 app.get('/makecampground',async(req,res)=>{
     const camp=new Campground({
         title:"My Campground",
@@ -84,11 +54,6 @@ app.get('/makecampground',async(req,res)=>{
     });
     await camp.save();
     res.send("Campground created");
-});
-app.delete('/campgrounds/:id',async(req,res)=>{
-    const { id } = req.params;
-    await Campground.findByIdAndDelete(id);
-    res.redirect('/campgrounds');
 });
 app.post('/campgrounds/:id/reviews',validateReview,async(req,res)=>{
     const campground=await Campground.findById(req.params.id);
