@@ -98,6 +98,12 @@ app.post('/campgrounds/:id/reviews',validateReview,async(req,res)=>{
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`);
 });
+app.delete('/campgrounds/:id/reviews/:reviewId',async(req,res)=>{//delete a review for a particular campground
+    const { id, reviewId } = req.params;
+    await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });//pull operator removes the reviewId from the reviews array of the campground  
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/campgrounds/${id}`);
+});
 app.use((req, res, next) => {
     next(new ExpressError('Page Not Found', 404));
 });// app.all('*', (req, res, next) => {  //only runs if no other route matches
