@@ -27,7 +27,7 @@ app.set('views',path.join(__dirname,'views'));
 app.use(express.urlencoded({ extended: true }));//to read form data
 app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
-
+app.use(express.static(path.join(__dirname,'public')));//static files like css,js,img will be served from public folder
 
 
 
