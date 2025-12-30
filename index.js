@@ -6,7 +6,8 @@ const Campground=require('./models/campground');// ./ is used to describe that i
 const methodOverride=require('method-override');
 const ejsmate=require('ejs-mate');
 const ExpressError=require('./utils/ExpressError');
-const Joi=require('joi')
+const {campgroundSchema,reviewSchema}=require('./schemas.js');
+const Review=require('./models/review');
 
 async function connectDB() {
   try {
@@ -27,19 +28,22 @@ app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 
 const validateCampground = (req, res, next) => {//route level middleware
-    const schema = Joi.object({
-        title: Joi.string().required(),
-        location: Joi.string().required(),
-        image: Joi.string().required(),
-        price: Joi.number().min(0).required(),
-        description: Joi.string().required()
-    });
-    const { error } = schema.validate(req.body.campground);
+    const { error } = campgroundSchema.validate(req.body.campground);
     if (error) {
         const msg=error.details.map(el=>el.message).join(',');
         throw new ExpressError(msg, 400);
     }
-    next();
+    else
+        next();
+};
+const validateReview = (req, res, next) => {//route level middleware
+    const { error } = reviewSchema.validate(req.body.review);
+    if (error) {
+        const msg=error.details.map(el=>el.message).join(',');
+        throw new ExpressError(msg, 400);
+    }
+    else
+        next();
 };
 
 app.get('/',(req,res)=>{
@@ -85,6 +89,14 @@ app.delete('/campgrounds/:id',async(req,res)=>{
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
+});
+app.post('/campgrounds/:id/reviews',validateReview,async(req,res)=>{
+    const campground=await Campground.findById(req.params.id);
+    const review=new Review(req.body.review);//since you have named the form fields as review[rating], review[body]
+    campground.reviews.push(review);
+    await review.save();
+    await campground.save();
+    res.redirect(`/campgrounds/${campground._id}`);
 });
 app.use((req, res, next) => {
     next(new ExpressError('Page Not Found', 404));
