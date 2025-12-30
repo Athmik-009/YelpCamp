@@ -14,4 +14,11 @@ const campgroundSchema=new Schema({
     }]
 });
 
+campgroundSchema.post('findOneAndDelete', async function(doc) { //middleware to delete all reviews associated with a campground when the campground is deleted
+    if (doc) {
+        await review.deleteMany({
+            _id: { $in: doc.reviews }
+        });
+    }
+});
 module.exports=mongoose.model('Campground',campgroundSchema);
