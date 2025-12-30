@@ -10,6 +10,9 @@ const {campgroundSchema,reviewSchema}=require('./schemas.js');
 const Review=require('./models/review');
 const camgroundroutes=require('./routes/campgrounds.js');
 const reviewroutes=require('./routes/reviews.js');
+const session=require('express-session');
+const flash=require('connect-flash');
+
 async function connectDB() {
   try {
     await mongoose.connect('mongodb://localhost:27017/yelpcamp');
@@ -29,7 +32,25 @@ app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 app.use(express.static(path.join(__dirname,'public')));//static files like css,js,img will be served from public folder
 
+const sessionConfig={
+    secret:'thisshouldbeabettersecret!',//used to sign the session id cookie
+    resave:false,
+    saveUninitialized:true,
+    cookie:{//cookie settings for the session
+        httpOnly:true,//client side js cannot access the cookie
+        expires:Date.now()+1000*60*60*24*7,//1 week from now
+        maxAge:1000*60*60*24*7
+    }
+};
 
+app.use(session(sessionConfig));//sessions are used to store data between requests it sends a cookie to the client with a session id
+app.use(flash());
+
+app.use((req,res,next)=>{//middleware to make flash messages and current user available in all templates 
+    res.locals.success=req.flash('success');
+    res.locals.error=req.flash('error');
+    next();
+});
 
 app.use('/campgrounds',camgroundroutes);//prefix all campground routes with /campgrounds
 app.use('/campgrounds/:id/reviews',reviewroutes);//prefix all review routes with /campgrounds/:id/reviews
