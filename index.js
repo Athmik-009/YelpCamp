@@ -28,7 +28,7 @@ app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 
 const validateCampground = (req, res, next) => {//route level middleware
-    const { error } = campgroundSchema.validate(req.body.campground);
+    const { error } = campgroundSchema.validate(req.body);
     if (error) {
         const msg=error.details.map(el=>el.message).join(',');
         throw new ExpressError(msg, 400);
@@ -37,7 +37,7 @@ const validateCampground = (req, res, next) => {//route level middleware
         next();
 };
 const validateReview = (req, res, next) => {//route level middleware
-    const { error } = reviewSchema.validate(req.body.review);
+    const { error } = reviewSchema.validate(req.body);
     if (error) {
         const msg=error.details.map(el=>el.message).join(',');
         throw new ExpressError(msg, 400);
@@ -63,7 +63,7 @@ app.post('/campgrounds',validateCampground,async(req,res)=>{
     res.redirect(`/campgrounds/${campground._id}`);
 });
 app.get('/campgrounds/:id',async(req,res)=>{
-    const campground=await Campground.findById(req.params.id);
+    const campground=await Campground.findById(req.params.id).populate('reviews');//populate reviews array with actual review documents instead of just their ids
     res.render('campgrounds/show',{ campground });
 });
 app.get('/campgrounds/:id/edit',async(req,res)=>{
