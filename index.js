@@ -9,6 +9,7 @@ const ExpressError=require('./utils/ExpressError');
 const {campgroundSchema,reviewSchema}=require('./schemas.js');
 const Review=require('./models/review');
 const camgroundroutes=require('./routes/campgrounds.js');
+const reviewroutes=require('./routes/reviews.js');
 async function connectDB() {
   try {
     await mongoose.connect('mongodb://localhost:27017/yelpcamp');
@@ -28,17 +29,10 @@ app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 
 
-const validateReview = (req, res, next) => {//route level middleware
-    const { error } = reviewSchema.validate(req.body);
-    if (error) {
-        const msg=error.details.map(el=>el.message).join(',');
-        throw new ExpressError(msg, 400);
-    }
-    else
-        next();
-};
+
 
 app.use('/campgrounds',camgroundroutes);//prefix all campground routes with /campgrounds
+app.use('/campgrounds/:id/reviews',reviewroutes);//prefix all review routes with /campgrounds/:id/reviews
 
 app.get('/',(req,res)=>{
     res.render('home');
@@ -55,20 +49,7 @@ app.get('/makecampground',async(req,res)=>{
     await camp.save();
     res.send("Campground created");
 });
-app.post('/campgrounds/:id/reviews',validateReview,async(req,res)=>{
-    const campground=await Campground.findById(req.params.id);
-    const review=new Review(req.body.review);//since you have named the form fields as review[rating], review[body]
-    campground.reviews.push(review);
-    await review.save();
-    await campground.save();
-    res.redirect(`/campgrounds/${campground._id}`);
-});
-app.delete('/campgrounds/:id/reviews/:reviewId',async(req,res)=>{//delete a review for a particular campground
-    const { id, reviewId } = req.params;
-    await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });//pull operator removes the reviewId from the reviews array of the campground  
-    await Review.findByIdAndDelete(reviewId);
-    res.redirect(`/campgrounds/${id}`);
-});
+
 app.use((req, res, next) => {
     next(new ExpressError('Page Not Found', 404));
 });// app.all('*', (req, res, next) => {  //only runs if no other route matches
