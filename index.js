@@ -47,7 +47,7 @@ app.use(session(sessionConfig));//sessions are used to store data between reques
 app.use(flash());
 
 app.use((req,res,next)=>{//middleware to make flash messages and current user available in all templates 
-    res.locals.success=req.flash('success');
+    res.locals.success=req.flash('success');//flash messages with key 'success'
     res.locals.error=req.flash('error');
     next();
 });
