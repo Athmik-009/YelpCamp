@@ -12,6 +12,9 @@ const camgroundroutes=require('./routes/campgrounds.js');
 const reviewroutes=require('./routes/reviews.js');
 const session=require('express-session');
 const flash=require('connect-flash');
+const passport=require('passport');
+const LocalStrategy=require('passport-local');
+const User=require('./models/user.js');
 
 async function connectDB() {
   try {
@@ -46,6 +49,13 @@ const sessionConfig={
 app.use(session(sessionConfig));//sessions are used to store data between requests it sends a cookie to the client with a session id
 app.use(flash());
 
+app.use(passport.initialize());//passport middleware to handle authentication
+app.use(passport.session());//passport to use sessions
+passport.use(new LocalStrategy(User.authenticate()));//using local strategy for authentication which is authenticate method present in User model provided by passport-local-mongoose
+
+passport.serializeUser(User.serializeUser());//how to store user in session
+passport.deserializeUser(User.deserializeUser());//how to get user from session
+
 app.use((req,res,next)=>{//middleware to make flash messages and current user available in all templates 
     res.locals.success=req.flash('success');//flash messages with key 'success'
     res.locals.error=req.flash('error');
@@ -59,6 +69,11 @@ app.get('/',(req,res)=>{
     res.render('home');
 });
 
+app.get('/fakeuser',async(req,res)=>{
+    const user=new User({email:'asdf@gmail.com',username:'asdf'});
+    const newUser=await User.register(user,'chicken');//register method provided by passport-local-mongoose to create a new user with hashed password
+    res.send(newUser);
+});
 
 app.get('/makecampground',async(req,res)=>{
     const camp=new Campground({
