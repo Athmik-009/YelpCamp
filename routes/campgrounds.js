@@ -52,7 +52,12 @@ router.get('/:id/edit',isLoggedIn,async(req,res)=>{
 });
 router.put('/:id',isLoggedIn,validateCampground,async(req,res)=>{
     const { id } = req.params;
-    await Campground.findByIdAndUpdate(id, req.body.campground);
+     const campground=await Campground.findById(req.params.id);
+    if(campground.author.equals(req.user._id)===false){//check if the logged in user is the author of the campground
+        req.flash('error','You do not have permission to do that!');
+        return  res.redirect(`/campgrounds/${id}`);
+    }
+    await Camp.findByIdAndUpdate(id, req.body.campground);
     req.flash('success','Successfully updated campground!');
     res.redirect(`/campgrounds/${id}`);
 });
