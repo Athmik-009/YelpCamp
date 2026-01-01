@@ -90,14 +90,19 @@ app.get('/makecampground',async(req,res)=>{
     res.send("Campground created");
 });
 
+// Catch-all for routes that don't match any handler
 app.use((req, res, next) => {
     next(new ExpressError('Page Not Found', 404));
-});// app.all('*', (req, res, next) => {  //only runs if no other route matches
-app.use((err,req,res,next)=>{  //no need to use try catch block in express 5 and above it will catch async errors automatically
-    console.error(err.stack);
-    if(!err.statusCode) err.statusCode = 500;
-    if(!err.message) err.message = 'Something went wrong';
-    res.status(err.statusCode).render('error', { statusCode: err.statusCode, message: err.message });
+});
+
+// Centralized error handler. Only print stack traces in development.
+app.use((err, req, res, next) => {
+    if (app.get('env') === 'development') {
+        console.error(err.stack);
+    }
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Something went wrong';
+    res.status(statusCode).render('error', { statusCode, message });
 });
 app.listen(3000,()=>{
     console.log("Server is running on port 3000");
