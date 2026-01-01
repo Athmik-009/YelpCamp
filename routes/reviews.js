@@ -4,11 +4,12 @@ const Campground=require('../models/campground.js');
 const Review=require('../models/review');
 const ExpressError=require('../utils/ExpressError.js');
 const {reviewSchema}=require('../schemas.js');
-const { validateReview } = require('../middleware.js');
+const { validateReview,isLoggedIn } = require('../middleware.js');
 
-router.post('/',validateReview,async(req,res)=>{
+router.post('/',isLoggedIn,validateReview,async(req,res)=>{
     const campground=await Campground.findById(req.params.id);
     const review=new Review(req.body.review);//since you have named the form fields as review[rating], review[body]
+    review.author=req.user._id;//set the author of the review to the currently logged in user
     campground.reviews.push(review);
     await review.save();
     await campground.save();
