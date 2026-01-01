@@ -60,6 +60,7 @@ passport.serializeUser(User.serializeUser());//how to store user in session
 passport.deserializeUser(User.deserializeUser());//how to get user from session
 
 app.use((req,res,next)=>{//middleware to make flash messages and current user available in all templates 
+    res.locals.currentUser=req.user;//req.user is added by passport and contains the currently logged in user
     res.locals.success=req.flash('success');//flash messages with key 'success'
     res.locals.error=req.flash('error');
     next();
