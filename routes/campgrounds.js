@@ -4,6 +4,7 @@ const Campground=require('../models/campground.js');
 const ExpressError=require('../utils/ExpressError.js');
 const {campgroundSchema}=require('../schemas.js');
 const { isLoggedIn } = require('../middleware.js');
+const { authorize } = require('passport');
 
 const validateCampground = (req, res, next) => {//route level middleware
     const { error } = campgroundSchema.validate(req.body);
@@ -28,12 +29,13 @@ router.get('/new',isLoggedIn,(req,res)=>{
 });
 router.post('/',isLoggedIn,validateCampground,async(req,res)=>{//we are adding isLoggedIn middleware to protect this route from postman attacks
     const campground=new Campground(req.body.campground);
+    campground.author=req.user._id;//set the author of the campground to the currently logged in user
     await campground.save();
     req.flash('success','Successfully made a new campground!');
     res.redirect(`/campgrounds/${campground._id}`);
 });
 router.get('/:id',async(req,res)=>{
-    const campground=await Campground.findById(req.params.id).populate('reviews');//populate reviews array with actual review documents instead of just their ids
+    const campground=await Campground.findById(req.params.id).populate('reviews').populate('author');//populate reviews array with actual review documents instead of just their ids
     if(!campground){
         req.flash('error','Cannot find that campground!');
         return res.redirect('/campgrounds');

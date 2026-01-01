@@ -8,6 +8,10 @@ const campgroundSchema=new Schema({
     price:Number,
     description:String,
     location:String,
+    author:{//reference to User model
+        type:Schema.Types.ObjectId,
+        ref:'User'
+    },
     reviews:[{//array of references to review documents(one-to-many relationship)
         type:Schema.Types.ObjectId,
         ref:'Review'
