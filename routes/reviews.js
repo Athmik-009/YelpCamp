@@ -4,7 +4,7 @@ const Campground=require('../models/campground.js');
 const Review=require('../models/review');
 const ExpressError=require('../utils/ExpressError.js');
 const {reviewSchema}=require('../schemas.js');
-const { validateReview,isLoggedIn } = require('../middleware.js');
+const { validateReview,isLoggedIn,isReviewAuthor } = require('../middleware.js');
 
 router.post('/',isLoggedIn,validateReview,async(req,res)=>{
     const campground=await Campground.findById(req.params.id);
@@ -16,7 +16,7 @@ router.post('/',isLoggedIn,validateReview,async(req,res)=>{
     req.flash('success','Created new review!');
     res.redirect(`/campgrounds/${campground._id}`);
 });
-router.delete('/:reviewId',async(req,res)=>{//delete a review for a particular campground
+router.delete('/:reviewId',isLoggedIn,isReviewAuthor,async(req,res)=>{//delete a review for a particular campground
     const { id, reviewId } = req.params;
     await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });//pull operator removes the reviewId from the reviews array of the campground  
     await Review.findByIdAndDelete(reviewId);

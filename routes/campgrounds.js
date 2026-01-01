@@ -24,7 +24,12 @@ router.post('/',isLoggedIn,isAuthor,validateCampground,async(req,res)=>{//we are
     res.redirect(`/campgrounds/${campground._id}`);
 });
 router.get('/:id',async(req,res)=>{
-    const campground=await Campground.findById(req.params.id).populate('reviews').populate('author');//populate reviews array with actual review documents instead of just their ids
+    const campground=await Campground.findById(req.params.id).populate({//populate the reviews with all their authors
+        path:'reviews',
+        populate:{
+            path:'author'
+        }
+    }).populate('author');//populate reviews array with actual review documents instead of just their ids
     if(!campground){
         req.flash('error','Cannot find that campground!');
         return res.redirect('/campgrounds');
