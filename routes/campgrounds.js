@@ -19,6 +19,10 @@ router.get('/',async(req,res)=>{
     res.render('campgrounds/index',{ campgrounds });
 });
 router.get('/new',(req,res)=>{
+    if(!req.isAuthenticated()){//isAuthenticated method is added by passport to req object to check if user is logged in
+        req.flash('error','You must be signed in first!');
+        return res.redirect('/login');
+    }
     res.render('campgrounds/new');
 });
 router.post('/',validateCampground,async(req,res)=>{
