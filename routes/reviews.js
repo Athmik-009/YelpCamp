@@ -4,16 +4,8 @@ const Campground=require('../models/campground.js');
 const Review=require('../models/review');
 const ExpressError=require('../utils/ExpressError.js');
 const {reviewSchema}=require('../schemas.js');
+const { validateReview } = require('../middleware.js');
 
-const validateReview = (req, res, next) => {//route level middleware
-    const { error } = reviewSchema.validate(req.body);
-    if (error) {
-        const msg=error.details.map(el=>el.message).join(',');
-        throw new ExpressError(msg, 400);
-    }
-    else
-        next();
-};
 router.post('/',validateReview,async(req,res)=>{
     const campground=await Campground.findById(req.params.id);
     const review=new Review(req.body.review);//since you have named the form fields as review[rating], review[body]
