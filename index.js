@@ -8,8 +8,11 @@ const ejsmate=require('ejs-mate');
 const ExpressError=require('./utils/ExpressError');
 const {campgroundSchema,reviewSchema}=require('./schemas.js');
 const Review=require('./models/review');
+
 const camgroundroutes=require('./routes/campgrounds.js');
 const reviewroutes=require('./routes/reviews.js');
+const userroutes=require('./routes/users.js');
+
 const session=require('express-session');
 const flash=require('connect-flash');
 const passport=require('passport');
@@ -62,6 +65,7 @@ app.use((req,res,next)=>{//middleware to make flash messages and current user av
     next();
 });
 
+app.use('/', userroutes);//prefix all user routes with /users
 app.use('/campgrounds',camgroundroutes);//prefix all campground routes with /campgrounds
 app.use('/campgrounds/:id/reviews',reviewroutes);//prefix all review routes with /campgrounds/:id/reviews
 
