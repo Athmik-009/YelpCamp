@@ -5,23 +5,10 @@ const Review=require('../models/review');
 const ExpressError=require('../utils/ExpressError.js');
 const {reviewSchema}=require('../schemas.js');
 const { validateReview,isLoggedIn,isReviewAuthor } = require('../middleware.js');
+const reviews=require('../controllers/reviews.js');
 
-router.post('/',isLoggedIn,validateReview,async(req,res)=>{
-    const campground=await Campground.findById(req.params.id);
-    const review=new Review(req.body.review);//since you have named the form fields as review[rating], review[body]
-    review.author=req.user._id;//set the author of the review to the currently logged in user
-    campground.reviews.push(review);
-    await review.save();
-    await campground.save();
-    req.flash('success','Created new review!');
-    res.redirect(`/campgrounds/${campground._id}`);
-});
-router.delete('/:reviewId',isLoggedIn,isReviewAuthor,async(req,res)=>{//delete a review for a particular campground
-    const { id, reviewId } = req.params;
-    await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });//pull operator removes the reviewId from the reviews array of the campground  
-    await Review.findByIdAndDelete(reviewId);
-    req.flash('success','Successfully deleted review!');
-    res.redirect(`/campgrounds/${id}`);
-});
+router.post('/',isLoggedIn,validateReview,reviews.createReview);
+
+router.delete('/:reviewId',isLoggedIn,isReviewAuthor,reviews.deleteReview);
 
 module.exports=router;
