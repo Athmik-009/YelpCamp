@@ -6,12 +6,18 @@ const { authorize } = require('passport');
 const {validateCampground,isAuthor}=require('../middleware.js');
 const campgrounds=require('../controllers/campgrounds.js');
 const { render } = require('ejs');
+const multer  = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 router.get('/',campgrounds.index);
 
 router.get('/new', isLoggedIn, campgrounds.renderNewForm);
 
-router.post('/',isLoggedIn,isAuthor,validateCampground,campgrounds.createCampground);
+// router.post('/',isLoggedIn,isAuthor,validateCampground,campgrounds.createCampground);
+router.post('/',upload.array('image'),(req,res)=>{
+    console.log(req.files);
+    res.send("File uploaded successfully");
+});
 
 router.get('/:id',campgrounds.showCampground);
 
