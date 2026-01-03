@@ -1,13 +1,16 @@
+if(process.env.NODE_ENV!=='production'){
+    require('dotenv').config();
+}
 const express=require('express');
 const app=express();
 const path=require('path');
 const mongoose=require('mongoose');
-const Campground=require('./models/campground');// ./ is used to describe that it a relative path and not an installed npm package
+const Campground=require('./models/campground.js');// ./ is used to describe that it a relative path and not an installed npm package
 const methodOverride=require('method-override');
 const ejsmate=require('ejs-mate');
-const ExpressError=require('./utils/ExpressError');
+const ExpressError=require('./utils/ExpressError.js');
 const {campgroundSchema,reviewSchema}=require('./schemas.js');
-const Review=require('./models/review');
+const Review=require('./models/review.js');
 
 const camgroundroutes=require('./routes/campgrounds.js');
 const reviewroutes=require('./routes/reviews.js');
