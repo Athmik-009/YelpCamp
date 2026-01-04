@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const Campground = require('../models/campground');
 const { cloudinary } = require('../cloudinary');
 module.exports.index = async (req, res) => {
@@ -14,7 +18,17 @@ module.exports.renderNewForm = (req,res)=>{
 };
 
 module.exports.createCampground = async(req,res)=>{//we are adding isLoggedIn middleware to protect this route from postman attacks
+    const geoData = await maptilerClient.geocoding.forward(req.body.campground.location, { limit: 1 });
+    // console.log(geoData);
+    if (!geoData.features?.length) {
+        req.flash('error', 'Could not geocode that location. Please try again and enter a valid location.');
+        return res.redirect('/campgrounds/new');
+    }
     const campground=new Campground(req.body.campground);
+
+    campground.geometry = geoData.features[0].geometry;
+    campground.location = geoData.features[0].place_name;
+
     campground.images=req.files.map(f=>({url:f.path,filename:f.filename}));//map over the array of files and create an array of objects with url and filename   
     campground.author=req.user._id;//set the author of the campground to the currently logged in user
     await campground.save();
@@ -52,7 +66,19 @@ module.exports.updateCampground = async(req,res)=>{
     //     req.flash('error','You do not have permission to do that!');
     //     return  res.redirect(`/campgrounds/${id}`);
     // }
+
+    const geoData = await maptilerClient.geocoding.forward(req.body.campground.location, { limit: 1 });
+    // console.log(geoData);
+    if (!geoData.features?.length) {
+        req.flash('error', 'Could not geocode that location. Please try again and enter a valid location.');
+        return res.redirect(`/campgrounds/${id}/edit`);
+    }
+
     const campground=await Campground.findByIdAndUpdate(id, req.body.campground);
+
+    campground.geometry = geoData.features[0].geometry;
+    campground.location = geoData.features[0].place_name;
+
     const imgs=req.files.map(f=>({url:f.path,filename:f.filename}));
     campground.images.push(...imgs);//push the new images into the images array
     await campground.save();

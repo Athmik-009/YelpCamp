@@ -1,6 +1,8 @@
 if(process.env.NODE_ENV!=='production'){
     require('dotenv').config();
 }
+const maptilerClient = require("@maptiler/client");
+maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY;
 const express=require('express');
 const app=express();
 const path=require('path');
