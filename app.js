@@ -4,7 +4,6 @@ if(process.env.NODE_ENV!=='production'){
 const maptilerClient = require("@maptiler/client");
 maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY;
 const express=require('express');
-const app=express();
 const path=require('path');
 const mongoose=require('mongoose');
 const Campground=require('./models/campground.js');// ./ is used to describe that it a relative path and not an installed npm package
@@ -13,16 +12,20 @@ const ejsmate=require('ejs-mate');
 const ExpressError=require('./utils/ExpressError.js');
 const {campgroundSchema,reviewSchema}=require('./schemas.js');
 const Review=require('./models/review.js');
-
 const camgroundroutes=require('./routes/campgrounds.js');
 const reviewroutes=require('./routes/reviews.js');
 const userroutes=require('./routes/users.js');
+const sanitizeV5 = require('./utils/mongoSanitizeV5.js');
 
 const session=require('express-session');
 const flash=require('connect-flash');
 const passport=require('passport');
 const LocalStrategy=require('passport-local');
 const User=require('./models/user.js');
+const { name } = require('ejs');
+
+const app=express();
+app.set('query parser', 'extended');
 
 async function connectDB() {
   try {
@@ -42,13 +45,16 @@ app.use(express.urlencoded({ extended: true }));//to read form data
 app.use(methodOverride('_method'));//to support PUT and DELETE requests
 app.engine('ejs',ejsmate);
 app.use(express.static(path.join(__dirname,'public')));//static files like css,js,img will be served from public folder
+app.use(sanitizeV5({ replaceWith: '_' }));//to sanitize user input to prevent mongo injection attacks
 
 const sessionConfig={
+    name:'session',//name of the session id cookie changed from default 'connect.sid' to 'session' for security reasons
     secret:'thisshouldbeabettersecret!',//used to sign the session id cookie
     resave:false,
     saveUninitialized:true,
     cookie:{//cookie settings for the session
         httpOnly:true,//client side js cannot access the cookie
+        // secure:true,//cookie will only be sent over https
         expires:Date.now()+1000*60*60*24*7,//1 week from now
         maxAge:1000*60*60*24*7
     }
