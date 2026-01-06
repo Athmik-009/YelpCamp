@@ -18,7 +18,7 @@ const userroutes=require('./routes/users.js');
 const sanitizeV5 = require('./utils/mongoSanitizeV5.js');
 const helmet=require('helmet');
 const dburl=process.env.DB_URL||'mongodb://localhost:27017/yelpcamp';
-
+const secret=process.env.SECRET||'thisshouldbeabettersecret!';
 
 const session=require('express-session');
 const flash=require('connect-flash');
@@ -55,7 +55,7 @@ const store = MongoStore.create({
     mongoUrl: dburl,
     touchAfter: 24 * 3600, // time period in seconds
     crypto: {
-        secret: 'thisshouldbeabettersecret!'//encrypting the session data in the database 
+        secret: secret//encrypting the session data in the database 
     }   
 });
 store.on("error",function(e){
@@ -64,7 +64,7 @@ store.on("error",function(e){
 const sessionConfig={
     store,
     name:'session',//name of the session id cookie changed from default 'connect.sid' to 'session' for security reasons
-    secret:'thisshouldbeabettersecret!',//used to sign the session id cookie
+    secret:secret,//used to sign the session id cookie
     resave:false,
     saveUninitialized:true,
     cookie:{//cookie settings for the session
@@ -185,6 +185,8 @@ app.use((err, req, res, next) => {
     const message = err.message || 'Something went wrong';
     res.status(statusCode).render('error', { statusCode, message });
 });
-app.listen(3000,()=>{
-    console.log("Server is running on port 3000");
+
+const port = process.env.PORT || 3000;
+app.listen(port,()=>{
+    console.log(`Serving on port ${port}`);
 });

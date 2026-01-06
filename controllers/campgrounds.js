@@ -2,6 +2,9 @@ if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
 
+const maptilerClient = require("@maptiler/client");
+maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY;
+
 const Campground = require('../models/campground');
 const { cloudinary } = require('../cloudinary');
 module.exports.index = async (req, res) => {
