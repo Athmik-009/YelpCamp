@@ -26,6 +26,7 @@ const passport=require('passport');
 const LocalStrategy=require('passport-local');
 const User=require('./models/user.js');
 const { name } = require('ejs');
+const { default: MongoStore } = require('connect-mongo');
 
 const app=express();
 app.set('query parser', 'extended');
@@ -50,7 +51,18 @@ app.engine('ejs',ejsmate);
 app.use(express.static(path.join(__dirname,'public')));//static files like css,js,img will be served from public folder
 app.use(sanitizeV5({ replaceWith: '_' }));//to sanitize user input to prevent mongo injection attacks
 
+const store = MongoStore.create({
+    mongoUrl: dburl,
+    touchAfter: 24 * 3600, // time period in seconds
+    crypto: {
+        secret: 'thisshouldbeabettersecret!'//encrypting the session data in the database 
+    }   
+});
+store.on("error",function(e){
+    console.log("SESSION STORE ERROR",e);
+});
 const sessionConfig={
+    store,
     name:'session',//name of the session id cookie changed from default 'connect.sid' to 'session' for security reasons
     secret:'thisshouldbeabettersecret!',//used to sign the session id cookie
     resave:false,
