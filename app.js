@@ -17,6 +17,8 @@ const reviewroutes=require('./routes/reviews.js');
 const userroutes=require('./routes/users.js');
 const sanitizeV5 = require('./utils/mongoSanitizeV5.js');
 const helmet=require('helmet');
+const dburl=process.env.DB_URL||'mongodb://localhost:27017/yelpcamp';
+
 
 const session=require('express-session');
 const flash=require('connect-flash');
@@ -30,7 +32,7 @@ app.set('query parser', 'extended');
 
 async function connectDB() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/yelpcamp');
+    await mongoose.connect(dburl);
     console.log("MongoDB connected");
   } catch (err) {
     console.error("MongoDB connection error:", err);
