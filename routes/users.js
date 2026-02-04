@@ -5,8 +5,13 @@ const passport = require('passport');
 const { storeReturnTo } = require('../middleware.js');
 const users = require('../controllers/users.js');
 
+// Wrapper function to catch async errors and pass to next()
+const catchAsync = fn => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 router.get('/register', users.renderRegister);
-router.post('/register', users.register);
+router.post('/register', catchAsync(users.register));
 
 router.get('/login', users.renderLogin); 
 router.post('/login',

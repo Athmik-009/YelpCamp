@@ -4,16 +4,25 @@ module.exports.renderRegister = (req, res) => {
     res.render('users/register');
 }
 
-module.exports.register = async (req, res, next) => {
+module.exports.register = async (req, res) => {
     try {
         const { email, username, password } = req.body;
         const user = new User({ email, username });
-        const registeredUser = await User.register(user, password);
-        req.login(registeredUser, err => {//auto login after registration
-            if (err) return next(err);
-            req.flash('success', 'Welcome to YelpCamp!');
-            res.redirect('/campgrounds');
+        
+        // Use setPassword (from passport-local-mongoose) instead of register method to avoid hook issues
+        user.setPassword(password);
+        const registeredUser = await user.save();
+        
+        // Promisify req.login to avoid callback issues
+        await new Promise((resolve, reject) => {
+            req.login(registeredUser, (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
         });
+        
+        req.flash('success', 'Welcome to YelpCamp!');
+        res.redirect('/campgrounds');
        
     } catch (e) {
         req.flash('error', e.message);
